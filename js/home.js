@@ -35,7 +35,7 @@ export function mountHome(root) {
       <div class="box"><div class="k">${icon('bolt', 16)}Idea of the day</div>
         <div class="idea"><div id="iboard"></div><div><h3>${idea.t}</h3><p>${idea.b}</p></div></div></div>
       <div class="box"><div class="k">${icon('list', 16)}Building ponder</div><ul class="roadmap">
-        <li class="done"><i>${icon('check', 12)}</i>Board and rules</li><li class="now"><i>2</i>Clocks and game controls</li><li><i>3</i>Online rooms</li>
+        <li class="done"><i>${icon('check', 12)}</i>Board and rules</li><li class="done"><i>${icon('check', 12)}</i>Clocks, game controls, replays</li><li class="now"><i>3</i>Online rooms</li>
         <li><i>4</i>Stockfish and analysis</li><li><i>5</i>Coaching game</li><li><i>6</i>Replay with coach chat</li><li><i>7</i>Puzzles, lesson cards, path</li></ul></div>
     </div>
   </div>`;

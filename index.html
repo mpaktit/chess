@@ -15,15 +15,16 @@
 <body>
   <div class="app">
     <nav class="rail" aria-label="Main">
-      <a class="brand" href="#/" aria-label="ponder home"><img src="assets/pieces/cburnett/wN.svg" alt=""></a>
-      <a class="ri" href="#/" data-r="" data-ic="home">Home</a>
-      <a class="ri" href="#/play" data-r="play" data-ic="play">Play</a>
-      <a class="ri" href="#/replay" data-r="replay" data-ic="replay">Replay</a>
-      <a class="ri" href="#/train" data-r="train" data-ic="train">Train</a>
-      <a class="ri" href="#/journal" data-r="journal" data-ic="journal">Journal</a>
+      <a class="brand" href="#/" aria-label="ponder home"><span class="bm"><img src="assets/pieces/cburnett/wN.svg" alt=""></span><span class="bw">ponder</span></a>
+      <a class="ri" href="#/" data-r="" data-ic="home" style="--c:#BFB2FF">Home</a>
+      <a class="ri" href="#/play" data-r="play" data-ic="play" style="--c:#F0A43A">Play</a>
+      <a class="ri" href="#/replay" data-r="replay" data-ic="replay" style="--c:#6EB6F5">Replay</a>
+      <a class="ri" href="#/train" data-r="train" data-ic="train" style="--c:#7CC47F">Train</a>
+      <a class="ri" href="#/journal" data-r="journal" data-ic="journal" style="--c:#F08FAE">Journal</a>
       <span class="sp"></span>
-      <button class="ri rset" id="toggleSound"></button>
-      <button class="ri rset" id="openSettings" data-ic="settings">Settings</button>
+      <button class="ri rset" id="toggleSound" style="--c:#8A847A"></button>
+      <button class="ri rset" id="openSettings" data-ic="settings" style="--c:#8A847A">Settings</button>
+      <button class="ri rset rcol" id="collapse" data-ic="collapse" style="--c:#8A847A">Collapse</button>
     </nav>
     <main id="view"></main>
   </div>
