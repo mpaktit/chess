@@ -20,17 +20,35 @@ export function fmtSpent(ms) {
   if (s < 60) return Math.round(s) + 's';
   return `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 }
-/** Move list rows. spent: ms per ply (optional). */
-export function moveListHTML(moves, view, spent = []) {
+const VAL = { p: 0, n: 3, b: 3, r: 5, q: 9, k: 0 };
+/** Opening / middlegame / endgame for each ply, from material left and move number */
+export function phases(moves) {
+  const left = { w: 31, b: 31 }; let queens = 2; const out = [];
+  moves.forEach((m, i) => {
+    if (m.captured) { left[m.color === 'w' ? 'b' : 'w'] -= VAL[m.captured]; if (m.captured === 'q') queens--; }
+    const total = left.w + left.b;
+    out.push(total <= 26 || (queens === 0 && total <= 34) ? 'end' : i < 20 && queens === 2 && total >= 56 ? 'open' : 'mid');
+  });
+  for (let i = 1; i < out.length; i++) if (out[i] === 'open' && out[i - 1] !== 'open') out[i] = out[i - 1];
+  for (let i = 1; i < out.length; i++) if (out[i - 1] === 'end') out[i] = 'end';
+  return out;
+}
+const PH = { open: 'Opening', mid: 'Middlegame', end: 'Endgame' };
+/** Move list with phase chapters, figurines and think-time per move */
+export function moveListHTML(moves, view, spent = [], opening = '') {
   if (!moves.length) return `<div class="mempty"><b>No moves yet</b>Drag a piece or tap it, then tap where it should go.</div>`;
-  const max = Math.max(1000, ...spent.filter(x => x != null));
-  const bar = (i, c) => spent[i] == null ? '<span></span>' : `<span class="tbar ${c}"><em>${fmtSpent(spent[i])}</em><span class="trk"><i style="width:${Math.max(6, Math.round(spent[i] / max * 100))}%"></i></span></span>`;
-  let h = '';
+  const known = spent.filter(x => x != null), max = Math.max(3000, ...known);
+  const avg = known.length ? known.reduce((a, b) => a + b, 0) / known.length : 0;
+  const ph = phases(moves);
+  const cell = i => {
+    const m = moves[i]; if (!m) return '<span></span>';
+    const t = spent[i], long = t != null && known.length > 5 && t > avg * 2.2 && t > 8000;
+    return `<button class="mv ${view === i + 1 ? 'cur' : ''} ${long ? 'long' : ''}" data-ply="${i + 1}"><span class="san">${figSan(m.san, m.color)}</span>${t != null ? `<span class="tt">${fmtSpent(t)}</span><i class="tl" style="width:${Math.max(3, Math.round(t / max * 100))}%"></i>` : ''}</button>`;
+  };
+  let h = '', last = '';
   for (let i = 0; i < moves.length; i += 2) {
-    const a = moves[i], b = moves[i + 1];
-    const cell = (m, p) => `<button class="mv ${view === p ? 'cur' : ''}" data-ply="${p}">${figSan(m.san, m.color)}</button>`;
-    h += `<div class="mrow"><span class="n">${i / 2 + 1}.</span>${cell(a, i + 1)}${b ? cell(b, i + 2) : '<span></span>'}
-      <span class="tcol">${bar(i, 'w')}${b ? bar(i + 1, 'b') : ''}</span></div>`;
+    if (ph[i] !== last) { last = ph[i]; h += `<div class="phase ${last}"><span>${PH[last]}</span>${last === 'open' && opening ? `<em>${opening}</em>` : ''}</div>`; }
+    h += `<div class="mrow"><span class="n">${i / 2 + 1}</span>${cell(i)}${cell(i + 1)}</div>`;
   }
   return h;
 }

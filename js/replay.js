@@ -25,10 +25,12 @@ export function mountReplay(root, id) {
       <div class="pane on">
         <div class="mlist" id="mlist"></div>
         <div class="soonbox">${icon('chat', 20)}<div><b>Coach review lands in step 6</b><small>Chapters, your mistakes explained, “try it first” moments and a chat right here to ask about any move.</small></div></div>
-        <div class="navrow">
+        <div class="navbar" style="padding-top:10px">
+          <div class="pill">
           <button class="nb" id="first" aria-label="First move">${icon('first')}</button><button class="nb" id="prev" aria-label="Previous move">${icon('prev')}</button>
           <button class="nb" id="auto" aria-label="Autoplay">${icon('autoplay')}</button>
           <button class="nb" id="next" aria-label="Next move">${icon('next')}</button><button class="nb" id="last" aria-label="Last move">${icon('last')}</button>
+          </div>
         </div>
         <div class="tools">
           <button class="tb" id="pgn" data-tip="Copy PGN">${icon('copy')}</button>
@@ -52,7 +54,7 @@ export function mountReplay(root, id) {
     const top = board.orientation === 'w' ? 'b' : 'w';
     $('[data-s=top]').innerHTML = strip(top); $('[data-s=bot]').innerHTML = strip(top === 'w' ? 'b' : 'w');
     const ml = $('#mlist');
-    ml.innerHTML = moveListHTML(game.moves, game.view, spent) + `<div class="mres">${rec.result.replace('1/2', '½').replace('1/2', '½')} · ${rec.reason}</div>`;
+    ml.innerHTML = moveListHTML(game.moves, game.view, spent, rec.opening) + `<div class="mres">${rec.result.replace('1/2', '½').replace('1/2', '½')} · ${rec.reason}</div>`;
     ml.querySelector('.mv.cur')?.scrollIntoView({ block: 'nearest' });
     $('#first').disabled = $('#prev').disabled = game.view === 0;
     $('#next').disabled = $('#last').disabled = game.view === game.ply;

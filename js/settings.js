@@ -5,12 +5,14 @@ export const THEMES = {
   forest: { name: 'Forest', l: '#EBECD0', d: '#739552', ll: '#F5F682', ld: '#B9CA43', sl: '#F5F682', sd: '#B9CA43' },
   ink:    { name: 'Ink',    l: '#E6E8EE', d: '#4B5874', ll: '#F2E3A0', ld: '#8E8A5C', sl: '#C4CCF5', sd: '#6672A8' },
   rose:   { name: 'Rose',   l: '#F3E6E2', d: '#B37C86', ll: '#F6E3A8', ld: '#D1A770', sl: '#F0C9D6', sd: '#B97B92' },
+  sky:    { name: 'Sky',    l: '#EEF1F4', d: '#6A9BDA', ll: '#F4E9A8', ld: '#B9C37A', sl: '#CFE0FA', sd: '#4F84CC' },
   stone:  { name: 'Stone',  l: '#DEDBD4', d: '#8E8A82', ll: '#EBDC9E', ld: '#B3A46A', sl: '#D3D6EC', sd: '#9096BC' },
 };
-export const PIECE_SETS = { staunty: 'Staunty', cburnett: 'Classic', merida: 'Merida', alpha: 'Alpha', maestro: 'Maestro', california: 'California' };
-const DEFAULTS = { theme: 'slate', pieces: 'staunty', sound: true, coords: true, dots: true, autoQueen: false, animate: true };
+export const PIECE_SETS = { ponder: 'Ponder', tatiana: 'Tatiana', pirouetti: 'Pirouetti', staunty: 'Staunty', cburnett: 'Classic', merida: 'Merida', alpha: 'Alpha', maestro: 'Maestro', california: 'California' };
+const DEFAULTS = { v: 2, theme: 'slate', pieces: 'ponder', sound: true, coords: true, dots: true, autoQueen: false, animate: true };
 const KEY = 'ponder.settings';
 let S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') };
+if ((S.v || 1) < 2) { S.pieces = 'ponder'; S.v = 2; localStorage.setItem(KEY, JSON.stringify(S)); }
 
 export const settings = {
   get: k => S[k],
