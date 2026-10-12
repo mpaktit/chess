@@ -1,8 +1,9 @@
 // ponder — interactive chess board (no dependencies)
 const FILES = 'abcdefgh';
-export const PIECE_URL = (code) => `assets/pieces/${code}.svg`; // code like "wN"
+import { pieceUrl } from './settings.js';
+export const PIECE_URL = code => pieceUrl(code); // code like "wN"
 
-const ARROW_COLORS = { think: '#5B6CF0', good: '#3E9468', warn: '#D7613F' };
+const ARROW_COLORS = { think: '#F0A43A', good: '#5FB563', warn: '#E5533B', blue: '#6F8CFF' };
 
 export function sqToXY(sq, orientation) {
   const f = FILES.indexOf(sq[0]), r = +sq[1] - 1;
@@ -40,7 +41,9 @@ export class Board {
     this.ghosts = [];
     this.view = false;
     this.build();
+    window.addEventListener('ponder:settings', e => { if (e.detail.k === 'pieces') this.refreshPieces(); });
   }
+  refreshPieces() { for (const el of this.pieceEls.values()) el.style.backgroundImage = `url(${PIECE_URL(el.dataset.code)})`; }
 
   build() {
     this.el.classList.add('board');
@@ -236,6 +239,7 @@ export class Board {
   setDrawings(list) { this.drawings = list.slice(); this.renderDrawings(); }
   renderDrawings() {
     const S = 100; // viewBox units per square
+    this.svg.style.opacity = 1;
     const c = s => { const [x, y] = sqToXY(s, this.orientation); return [x * S + S / 2, y * S + S / 2]; };
     let out = '';
     for (const d of this.drawings) {

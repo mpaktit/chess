@@ -1,5 +1,6 @@
 // ponder — soft synthesized sounds (no audio files)
-let ctx = null, enabled = localStorage.getItem('ponder.sound') !== 'off';
+import { settings } from './settings.js';
+let ctx = null;
 function ac() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
 
 function knock({ freq = 180, decay = 0.09, gain = 0.5, noise = 0.6, delay = 0 } = {}) {
@@ -32,10 +33,10 @@ function tone(freq, t0, dur, gain = 0.18, type = 'sine') {
   o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
 }
 export const sound = {
-  get on() { return enabled; },
-  toggle() { enabled = !enabled; localStorage.setItem('ponder.sound', enabled ? 'on' : 'off'); return enabled; },
+  get on() { return settings.get('sound'); },
+  toggle() { settings.set('sound', !settings.get('sound')); return settings.get('sound'); },
   play(kind) {
-    if (!enabled) return;
+    if (!settings.get('sound')) return;
     try {
       switch (kind) {
         case 'move': knock(); break;

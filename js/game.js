@@ -40,6 +40,13 @@ export class Game {
     this.ended = null; this.view = this.ply;
   }
   resign(color) { this.ended = { result: color === 'w' ? '0-1' : '1-0', reason: (color === 'w' ? 'White' : 'Black') + ' resigned' }; }
+  timeout(c) {
+    const opp = c === 'w' ? 'b' : 'w', pcs = [];
+    for (const row of this.chess.board()) for (const p of row) if (p && p.color === opp && p.type !== 'k') pcs.push(p.type);
+    const draw = !pcs.length || (pcs.length === 1 && 'nb'.includes(pcs[0]));
+    this.ended = draw ? { result: '1/2-1/2', reason: 'Time ran out, but no mating material' }
+                      : { result: opp === 'w' ? '1-0' : '0-1', reason: (c === 'w' ? 'White' : 'Black') + ' ran out of time' };
+  }
   agreeDraw() { this.ended = { result: '1/2-1/2', reason: 'Draw agreed' }; }
 
   get over() { return !!this.status().over; }

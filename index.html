@@ -2,21 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#161512">
   <title>ponder · think first, then move</title>
   <meta name="description" content="A chess app for learning by thinking, not memorizing.">
-  <link rel="icon" href="assets/pieces/wN.svg">
+  <link rel="icon" href="assets/pieces/staunty/wN.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400..800&display=swap">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <header class="top">
-    <a class="logo" href="#/"><div class="mark"></div><span>ponder</span></a>
-    <nav class="nav">
-      <a href="#/" data-r="">Home</a><a href="#/play" data-r="play">Play</a><a href="#/replay" data-r="replay">Replay</a>
-      <a href="#/train" data-r="train">Train</a><a href="#/journal" data-r="journal">Journal</a>
+  <div class="app">
+    <nav class="rail" aria-label="Main">
+      <a class="brand" href="#/" aria-label="ponder home"><img src="assets/pieces/cburnett/wN.svg" alt=""></a>
+      <a class="ri" href="#/" data-r="" data-ic="home">Home</a>
+      <a class="ri" href="#/play" data-r="play" data-ic="play">Play</a>
+      <a class="ri" href="#/replay" data-r="replay" data-ic="replay">Replay</a>
+      <a class="ri" href="#/train" data-r="train" data-ic="train">Train</a>
+      <a class="ri" href="#/journal" data-r="journal" data-ic="journal">Journal</a>
+      <span class="sp"></span>
+      <button class="ri rset" id="toggleSound"></button>
+      <button class="ri rset" id="openSettings" data-ic="settings">Settings</button>
     </nav>
-  </header>
-  <main id="view"></main>
+    <main id="view"></main>
+  </div>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
