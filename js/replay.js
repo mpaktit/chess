@@ -18,29 +18,35 @@ export function mountReplay(root, id) {
       <div class="strip" data-s="bot"></div>
     </div>
     <aside class="panel">
-      <div class="rphead">
-        <a class="tb" href="#/replay" data-tip="All games">${icon('prev')}</a>
-        <div><b>${rec.opening || 'Own path'}</b><small>${resultText(rec.result)} · ${rec.reason} · ${rec.tc === '—' ? 'No clock' : rec.tc} · ${ago(rec.ts)}</small></div>
-      </div>
-      <div class="pane on">
-        <div class="mlist" id="mlist"></div>
-        <div class="soonbox">${icon('chat', 20)}<div><b>Coach review lands in step 6</b><small>Chapters, your mistakes explained, “try it first” moments and a chat right here to ask about any move.</small></div></div>
-        <div class="navbar" style="padding-top:10px">
-          <div class="pill">
+      <header class="phd">
+        <div class="phd-top">
+          <a class="tb" href="#/replay" data-tip="All games">${icon('prev')}</a>
+          <span class="chip">${icon('archive', 15)}Replay</span><span class="chip">${icon('clock', 15)}${rec.tc === '—' ? 'No clock' : rec.tc}</span>
+          <span class="grow1"></span>
+          <button class="tb" id="more" data-tip="More">${icon('dots')}</button>
+        </div>
+        <div class="phd-op"><b>${rec.opening || 'Own path'}</b><span class="turn over">${resultText(rec.result)}</span></div>
+        <div class="rpmeta">${rec.reason} · ${Math.ceil(rec.sans.length / 2)} moves · ${ago(rec.ts)}</div>
+      </header>
+      <div class="seg" role="tablist"><button class="sg on" data-tab="moves">Moves</button><button class="sg" data-tab="coach">Coach review</button></div>
+      <section class="pane on" data-pane="moves"><div class="mlist" id="mlist"></div></section>
+      <section class="pane" data-pane="coach"><div class="cpane">
+        <div class="chead"><div class="ava">${icon('coach', 24)}</div><div><b>Coach review</b><small>Arrives in step 6</small></div></div>
+        <div class="cbub">After each game I’ll split it into chapters, show where it turned, and let you try the key moments yourself before I explain. You’ll be able to ask me about any move right here.</div>
+        <ul class="clist"><li>Chapters: opening, turning point, endgame</li><li>“Try it first” at your mistakes</li><li>“What if” lines on the board</li><li>A chat that stays next to the board</li></ul>
+      </div></section>
+      <div class="navbar" style="padding-top:10px">
+        <div class="pill">
           <button class="nb" id="first" aria-label="First move">${icon('first')}</button><button class="nb" id="prev" aria-label="Previous move">${icon('prev')}</button>
           <button class="nb" id="auto" aria-label="Autoplay">${icon('autoplay')}</button>
           <button class="nb" id="next" aria-label="Next move">${icon('next')}</button><button class="nb" id="last" aria-label="Last move">${icon('last')}</button>
-          </div>
         </div>
-        <div class="tools">
-          <button class="tb" id="pgn" data-tip="Copy PGN">${icon('copy')}</button>
-          <button class="tb" id="dl" data-tip="Download PGN">${icon('download')}</button>
-          <button class="tb" id="fen" data-tip="Copy FEN">${icon('fen')}</button>
-          <button class="tb" id="del" data-tip="Delete game">${icon('trash')}</button>
-          <span></span>
-          <button class="tb" id="flip" data-tip="Flip board (F)">${icon('flip')}</button>
-          <button class="tb" id="set" data-tip="Settings">${icon('settings')}</button>
-        </div>
+        <button class="tb" id="flip" data-tip="Flip board (F)">${icon('flip')}</button>
+      </div>
+      <div class="menu" id="menu">
+        <button id="pgn">${icon('copy')}Copy PGN</button><button id="dl">${icon('download')}Download PGN</button>
+        <button id="fen">${icon('fen')}Copy position (FEN)</button><hr>
+        <button id="set">${icon('settings')}Board and pieces</button><button id="del">${icon('trash')}Delete game</button>
       </div>
     </aside>
   </div>`;
@@ -54,7 +60,7 @@ export function mountReplay(root, id) {
     const top = board.orientation === 'w' ? 'b' : 'w';
     $('[data-s=top]').innerHTML = strip(top); $('[data-s=bot]').innerHTML = strip(top === 'w' ? 'b' : 'w');
     const ml = $('#mlist');
-    ml.innerHTML = moveListHTML(game.moves, game.view, spent, rec.opening) + `<div class="mres">${rec.result.replace('1/2', '½').replace('1/2', '½')} · ${rec.reason}</div>`;
+    ml.innerHTML = moveListHTML(game.moves, game.view, spent, rec.opening) + `<div class="mres">${rec.result.replace(/1\/2/g, '½')} · ${rec.reason}</div>`;
     ml.querySelector('.mv.cur')?.scrollIntoView({ block: 'nearest' });
     $('#first').disabled = $('#prev').disabled = game.view === 0;
     $('#next').disabled = $('#last').disabled = game.view === game.ply;
@@ -74,6 +80,10 @@ export function mountReplay(root, id) {
     $('#auto').innerHTML = icon('pause'); $('#auto').classList.add('on');
     auto = setInterval(() => { if (game.view === game.ply) return stopAuto(); go(game.view + 1, false); }, 900);
   }
+  root.querySelector('.seg').onclick = e => { const b = e.target.closest('.sg'); if (!b) return;
+    root.querySelectorAll('.sg').forEach(x => x.classList.toggle('on', x === b)); root.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === b.dataset.tab)); };
+  $('#more').onclick = e => { e.stopPropagation(); $('#menu').classList.toggle('open'); };
+  root.querySelector('.play').addEventListener('click', e => { if (!e.target.closest('#more')) $('#menu').classList.remove('open'); });
   $('#mlist').onclick = e => { const b = e.target.closest('.mv'); if (b) go(+b.dataset.ply); };
   $('#first').onclick = () => go(0); $('#prev').onclick = () => go(game.view - 1);
   $('#next').onclick = () => go(game.view + 1); $('#last').onclick = () => go(game.ply);

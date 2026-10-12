@@ -1,5 +1,6 @@
 // ponder — UI helpers: icons, toast, modal, confirm, settings sheet
-import { settings, THEMES, PIECE_SETS, pieceUrl } from './settings.js';
+import { settings, THEMES, PIECE_SETS, pieceUrl, customPieces } from './settings.js';
+import { Board } from './board.js';
 const P = {
   home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   play: '<path d="M9 3h6l-1 4h2l-2 5h3l-1 9H8l-1-9h3L8 7h2z"/>',
@@ -73,11 +74,14 @@ export function openSettings() {
   const S = settings.all();
   const themes = Object.entries(THEMES).map(([k, t]) => `<div><button class="th ${S.theme === k ? 'on' : ''}" data-theme="${k}" aria-label="${t.name}">
     <i style="background:${t.l}"></i><i style="background:${t.d}"></i><i style="background:${t.d}"></i><i style="background:${t.l}"></i></button><div class="thn">${t.name}</div></div>`).join('');
-  const sets = Object.entries(PIECE_SETS).map(([k, n]) => `<div><button class="set ${S.pieces === k ? 'on' : ''}" data-set="${k}" aria-label="${n}"><img src="${pieceUrl('wN', k)}" alt=""></button><div class="thn">${n}</div></div>`).join('');
+  const sets = Object.entries(PIECE_SETS).map(([k, n]) => `<div><button class="set ${S.pieces === k ? 'on' : ''}" data-set="${k}" aria-label="${n}"><img src="${pieceUrl('wN', k)}" alt=""></button><div class="thn">${n}</div></div>`).join('')
+    + `<div><button class="set ${S.pieces === 'custom' ? 'on' : ''}" data-set="custom" aria-label="Your own pieces">${customPieces.get() ? `<img src="${pieceUrl('wN', 'custom')}" alt="">` : icon('plus', 26)}</button><div class="thn">Your own</div></div>`;
   const tog = (k, t, d) => `<div class="tog"><div><b>${t}</b><small>${d}</small></div><button class="sw ${S[k] ? 'on' : ''}" data-tog="${k}" role="switch" aria-checked="${!!S[k]}" aria-label="${t}"></button></div>`;
   const { el } = modal('Settings', `
+    <div class="spv"><div id="spv"></div><div class="spvt"><b>Preview</b><small>Changes apply right away, everywhere.</small></div></div>
     <div><h3>Board</h3><div class="themes">${themes}</div></div>
     <div><h3>Pieces</h3><div class="sets">${sets}</div></div>
+    <p class="hint">“Your own”: pick 12 images named like wK, wQ, wR, wB, wN, wP, bK … bP (png or svg). They stay in this browser only. <button class="lnk" data-reup>Replace images</button></p>
     <div><h3>Play</h3>
       ${tog('sound', 'Sounds', 'Moves, captures, checks and the clock')}
       ${tog('dots', 'Show legal moves', 'Dots on squares a piece can go to')}
@@ -85,10 +89,37 @@ export function openSettings() {
       ${tog('animate', 'Piece animation', 'Pieces glide instead of jumping')}
       ${tog('autoQueen', 'Auto-queen', 'Promote to a queen without asking')}
     </div>`);
+  el.querySelector('.mcard').classList.add('wide');
+  const pv = new Board(el.querySelector('#spv'), { canMove: () => false, dests: () => [] });
+  pv.setPosition('r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R', { animate: false });
+  pv.setMarks({ last: ['d2', 'd3'], check: null, sel: 'c4' });
+  pv.setDrawings([{ type: 'arrow', from: 'f3', to: 'g5', color: 'think' }]);
   el.addEventListener('click', e => {
     const th = e.target.closest('[data-theme]'), st = e.target.closest('[data-set]'), tg = e.target.closest('[data-tog]');
     if (th) { settings.set('theme', th.dataset.theme); el.querySelectorAll('.th').forEach(b => b.classList.toggle('on', b === th)); }
+    if (st && st.dataset.set === 'custom' && (!customPieces.get() || e.shiftKey)) { uploadPieces(() => { settings.set('pieces', 'custom'); el.querySelectorAll('.set').forEach(b => b.classList.toggle('on', b === st)); st.innerHTML = `<img src="${pieceUrl('wN', 'custom')}" alt="">`; }); return; }
     if (st) { settings.set('pieces', st.dataset.set); el.querySelectorAll('.set').forEach(b => b.classList.toggle('on', b === st)); }
+    if (e.target.closest('[data-reup]')) uploadPieces(() => settings.set('pieces', 'custom'));
     if (tg) { const k = tg.dataset.tog, v = !settings.get(k); settings.set(k, v); tg.classList.toggle('on', v); tg.setAttribute('aria-checked', v); }
   });
+}
+
+/** Let the user load their own 12 piece images (kept in this browser only) */
+function uploadPieces(done) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.multiple = true; inp.accept = 'image/png,image/svg+xml,image/webp';
+  inp.onchange = async () => {
+    const map = {};
+    for (const f of inp.files) {
+      const m = f.name.match(/^([wb])([kqrbnp])\b|^([wb])([kqrbnp])\./i) || f.name.match(/([wb])[-_ ]?([kqrbnp])/i);
+      if (!m) continue;
+      const c = (m[1] || m[3]).toLowerCase(), p = (m[2] || m[4]).toUpperCase();
+      map[c + p] = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+    }
+    const missing = ['K', 'Q', 'R', 'B', 'N', 'P'].flatMap(p => ['w' + p, 'b' + p]).filter(k => !map[k]);
+    if (missing.length) { toast(`Missing: ${missing.join(', ')}`); return; }
+    try { customPieces.set(map); } catch { toast('Those images are too big to store'); return; }
+    toast('Your pieces are in'); done();
+  };
+  inp.click();
 }

@@ -8,7 +8,7 @@ export const THEMES = {
   sky:    { name: 'Sky',    l: '#EEF1F4', d: '#6A9BDA', ll: '#F4E9A8', ld: '#B9C37A', sl: '#CFE0FA', sd: '#4F84CC' },
   stone:  { name: 'Stone',  l: '#DEDBD4', d: '#8E8A82', ll: '#EBDC9E', ld: '#B3A46A', sl: '#D3D6EC', sd: '#9096BC' },
 };
-export const PIECE_SETS = { ponder: 'Ponder', tatiana: 'Tatiana', pirouetti: 'Pirouetti', staunty: 'Staunty', cburnett: 'Classic', merida: 'Merida', alpha: 'Alpha', maestro: 'Maestro', california: 'California' };
+export const PIECE_SETS = { ponder: 'Classic', pirouetti2: 'Pirouetti', tatiana: 'Tatiana', staunty: 'Staunty', cburnett: 'Cburnett', merida: 'Merida', alpha: 'Alpha', maestro: 'Maestro', california: 'California' };
 const DEFAULTS = { v: 2, theme: 'slate', pieces: 'ponder', sound: true, coords: true, dots: true, autoQueen: false, animate: true };
 const KEY = 'ponder.settings';
 let S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') };
@@ -19,7 +19,13 @@ export const settings = {
   all: () => ({ ...S }),
   set(k, v) { S[k] = v; localStorage.setItem(KEY, JSON.stringify(S)); apply(); window.dispatchEvent(new CustomEvent('ponder:settings', { detail: { k, v } })); },
 };
-export const pieceUrl = (code, set = S.pieces) => `assets/pieces/${set}/${code}.svg`;
+const CKEY = 'ponder.customPieces';
+let CUSTOM = JSON.parse(localStorage.getItem(CKEY) || 'null');
+export const customPieces = {
+  get: () => CUSTOM,
+  set(map) { CUSTOM = map; if (map) localStorage.setItem(CKEY, JSON.stringify(map)); else localStorage.removeItem(CKEY); },
+};
+export const pieceUrl = (code, set = S.pieces) => set === 'custom' && CUSTOM?.[code] ? CUSTOM[code] : `assets/pieces/${set === 'custom' ? 'ponder' : set}/${code}.svg`;
 export function apply() {
   const t = THEMES[S.theme] || THEMES.slate, r = document.documentElement.style;
   r.setProperty('--sq-light', t.l); r.setProperty('--sq-dark', t.d);

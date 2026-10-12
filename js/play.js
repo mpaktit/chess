@@ -73,16 +73,18 @@ export function mountPlay(root, arg) {
       <div class="sheet" id="setup">
         <div class="shd"><h3>New game</h3><button class="tb" id="closeSetup" data-tip="Close">${icon('x')}</button></div>
         <div class="ng">
-          ${['Bullet', 'Blitz', 'Rapid'].map(n => `<div class="tcrow"><h4>${icon(n === 'Bullet' ? 'bolt' : n === 'Blitz' ? 'fire' : 'timer', 16)}${n}</h4><div class="tc">${TCS.filter(t => t.n === n).map(t => `<button class="tcb" data-tc="${t.k}">${t.k.endsWith('+0') ? t.k.split('+')[0] + ' min' : t.k}</button>`).join('')}</div></div>`).join('')}
-          <div class="tc one"><button class="tcb" data-tc="—">${icon('inf', 18)}No clock</button></div>
-          <div><h4>${icon('users', 16)}Opponent</h4><div class="opp">
-            <button class="oc on" data-opp="local"><span class="oi c1">${icon('device')}</span><span><b>Pass and play</b><small>Both sides, one screen</small></span></button>
-            <div class="oc lock"><span class="tag">Step 3</span><span class="oi c2">${icon('users')}</span><span><b>A friend</b><small>Online, room code</small></span></div>
-            <div class="oc lock"><span class="tag">Step 3</span><span class="oi c3">${icon('coach')}</span><span><b>Coach</b><small>Fair game, full strength</small></span></div>
-            <div class="oc lock"><span class="tag">Step 4</span><span class="oi c4">${icon('cpu')}</span><span><b>Stockfish</b><small>Levels 1 to 20</small></span></div>
-          </div></div>
+          <div><h4>${icon('users', 16)}Opponent</h4>
+            <div class="olist">
+              <button class="orow on" data-opp="local"><span class="oi c1">${icon('device')}</span><span class="ot"><b>Pass and play</b><small>Both sides on this screen</small></span><span class="radio"></span></button>
+              <div class="orow lock"><span class="oi c3">${icon('coach')}</span><span class="ot"><b>The coach</b><small>Fair game at full strength, or a coaching game</small></span><span class="tag">Step 3</span></div>
+              <div class="orow lock"><span class="oi c2">${icon('users')}</span><span class="ot"><b>A friend</b><small>Online room with a code</small></span><span class="tag">Step 3</span></div>
+              <div class="orow lock"><span class="oi c4">${icon('cpu')}</span><span class="ot"><b>Stockfish</b><small>Levels 1 to 20</small></span><span class="tag">Step 4</span></div>
+            </div></div>
+          <div><h4>${icon('clock', 16)}Time control</h4>
+          ${['Bullet', 'Blitz', 'Rapid'].map(n => `<div class="tcrow"><span class="tcn">${icon(n === 'Bullet' ? 'bolt' : n === 'Blitz' ? 'fire' : 'timer', 15)}${n}</span><div class="tc">${TCS.filter(t => t.n === n).map(t => `<button class="tcb" data-tc="${t.k}">${t.k.endsWith('+0') ? t.k.split('+')[0] + ' min' : t.k}</button>`).join('')}</div></div>`).join('')}
+          <div class="tcrow"><span class="tcn">${icon('inf', 15)}Untimed</span><div class="tc one"><button class="tcb" data-tc="—">No clock</button></div></div></div>
         </div>
-        <div class="shf"><button class="b3 go" id="start">${icon('play', 22)}Start game</button></div>
+        <div class="shf"><div class="sum" id="sum"></div><button class="b3 go" id="start">${icon('play', 22)}Start game</button></div>
       </div>
       <div class="menu" id="menu">
         <button data-act="pgn">${icon('copy')}Copy PGN</button><button data-act="dl">${icon('download')}Download PGN</button>
@@ -173,12 +175,16 @@ export function mountPlay(root, arg) {
     const top = board.orientation === 'w' ? 'b' : 'w';
     $('[data-s=top]').innerHTML = strip(top, 'top');
     $('[data-s=bot]').innerHTML = strip(top === 'w' ? 'b' : 'w', 'bot');
+    const live = !game.over;
+    $('[data-s=top]').classList.toggle('turn-on', live && game.turn === top);
+    $('[data-s=bot]').classList.toggle('turn-on', live && game.turn !== top);
     renderClocks();
     const st = game.status();
     if (st.over && !meta.archived) archiveGame(st);
     const op = game.opening();
     $('#opening').textContent = op || (game.ply ? 'Your own path' : 'Starting position');
     const t = TCS.find(x => x.k === tc);
+    $('#sum').innerHTML = `${t ? `${t.n} · ${tcLabel(tc)}` : 'No clock'} · Pass and play`;
     $('#tcchip').innerHTML = t ? `${icon(t.n === 'Bullet' ? 'bolt' : t.n === 'Blitz' ? 'fire' : 'timer', 15)}${t.n} · ${tcLabel(tc)}` : `${icon('inf', 15)}No clock`;
     const stEl = $('#st');
     stEl.innerHTML = st.over ? resultText(st.result) : `<i class="${game.turn}"></i>${st.check ? 'Check · ' : ''}${NAME[game.turn]} to move`;
@@ -297,7 +303,15 @@ export function mountPlay(root, arg) {
   window.addEventListener('keydown', onKey);
   const onSet = e => { if (e.detail.k === 'pieces') render({ animate: false }); };
   window.addEventListener('ponder:settings', onSet);
-  setTab(tab); if (!game.ply || arg === 'new') openSetup(true);
+  setTab(tab);
+  if (arg?.startsWith('start:')) {
+    history.replaceState(null, '', '#/play');
+    const k = arg.slice(6);
+    (async () => {
+      if (game.ply && !game.over && !(await confirmBox('Start a new game?', 'Your current game will be cleared.', 'Start new'))) return;
+      tc = TCS.some(t => t.k === k) ? k : tc; newGame(); toast(`${tcLabel(tc)} · White moves first`);
+    })();
+  } else if (!game.ply || arg === 'new') openSetup(true);
   render({ animate: false });
   window.ponder = { game, board, go, get clock() { return clock; } };
   return () => { stopAuto(); clock.stop(); window.removeEventListener('keydown', onKey); window.removeEventListener('ponder:settings', onSet); };
